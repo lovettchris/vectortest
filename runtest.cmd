@@ -1,10 +1,22 @@
 @echo off
-msbuild /p:Configuration=Release /p:Platform=x64 VectorMultiplyTest\VectorMultiplyTest.sln
+msbuild /p:Configuration=Release /p:Platform=x64 VectorMultiplyTest\VectorMultiplyTest.sln > nul 
+sleep 1
+echo =============== Double test =============================
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -c
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -c2
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -cxx
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -std::for_each
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -std::transform
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -blas
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -avx
 
-D:\git\vectortest\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -c
-D:\git\vectortest\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -c2
-D:\git\vectortest\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -cxx
-D:\git\vectortest\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -std::for_each
-D:\git\vectortest\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -std::transform
-D:\git\vectortest\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -blas
-D:\git\vectortest\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -avx
+msbuild /p:Configuration=Release /p:Platform=x64 VectorMultiplyTest\VectorMultiplyTest.sln /t:Rebuild /P:FLOATTEST=1 > nul 
+sleep 1
+echo =============== Single test =============================
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -c
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -c2
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -cxx
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -std::for_each
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -std::transform
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -blas
+.\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -avx
