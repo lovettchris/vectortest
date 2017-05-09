@@ -9,6 +9,7 @@
 #include "MathHelpers.h"
 #include "cblas.h"
 
+//#define FLOATTEST
 #ifdef FLOATTEST
 typedef float ElementType;
 #else
@@ -81,7 +82,7 @@ bool parseArguments(int argc, char* argv[]) {
 }
 
 void printUsage() {
-    printf("Usage: VectorMultiplyTest [-c|-cxx|-stdvector|-stdtransform|-valarray|-blas|-avx] [-i iterations] [-s size]\n");
+    printf("Usage: VectorMultiplyTest [-c|-cxx|-std::for_each|-std::transform|-blas|-avx] [-i iterations] [-s size]\n");
 }
 
 
@@ -154,8 +155,8 @@ int main(int argc, char* argv[])
 
     std::vector<double> times;
     Timer timer;
-
-    printf("Running %s with %d iterations...", testName.c_str(), iterations);
+    
+    printf("%s,\t", testName.c_str());
 
     ElementType* v = (ElementType*)calloc(size + 1, sizeof(ElementType));
     std::vector<ElementType> vector(size);
@@ -223,7 +224,11 @@ int main(int argc, char* argv[])
         times.push_back(timer.milliseconds());
     }
 
-    printf("\nMin=%f, Max=%f, Avg=%f, StdDev=%f\n", MathHelpers::Min(times), MathHelpers::Max(times), MathHelpers::Mean(times), MathHelpers::StandardDeviation(times));
+    double min = MathHelpers::Min(times);
+    double max = MathHelpers::Max(times);
+    double avg = MathHelpers::Mean(times);
+
+    printf("%f, %f, %f\n", avg, avg - min, max - avg);
 
     free(v);
     return 0;
