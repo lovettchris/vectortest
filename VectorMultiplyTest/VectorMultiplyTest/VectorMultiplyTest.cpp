@@ -9,6 +9,11 @@
 #include "MathHelpers.h"
 #include "cblas.h"
 
+#ifdef FLOATTEST
+typedef float ElementType;
+#else
+typedef double ElementType;
+#endif
 enum TestType {
     None,
     CTest,
@@ -16,7 +21,6 @@ enum TestType {
     CxxTest,
     StdForEachTest,
     StdTransformTest,
-    ValArrayTest,
     BlasTest,
     AvxTest
 };
@@ -46,13 +50,9 @@ bool parseArguments(int argc, char* argv[]) {
             test = StdForEachTest;
             testName = "std::for_each";
         }
-        else if (arg == "-stdtransform") {
+        else if (arg == "-std::transform") {
             test = StdTransformTest;
             testName = "std::transform";
-        }
-        else if (arg == "-valarray") {
-            test = ValArrayTest;
-            testName = "valarray";
         }
         else if (arg == "-blas") {
             test = BlasTest;
@@ -85,47 +85,59 @@ void printUsage() {
 }
 
 
-void RunCTest(float* begin, float* end,  float s) {
-    for (float* f = begin; f < end; f++)
+void RunCTest(ElementType* begin, ElementType* end, ElementType s) {
+    for (ElementType* f = begin; f < end; f++)
     {
         *f *= s;
     }
 }
-void RunC2Test(float* v, size_t size, float s) {
+void RunC2Test(ElementType* v, size_t size, ElementType s) {
     for (size_t i = 0; i < size; ++i)
     {
         v[i] *= s;
     }
 }
-void RunCxxTest(std::vector<float>& v, float s) {
+void RunCxxTest(std::vector<ElementType>& v, ElementType s) {
     for (auto& e : v)
     {
         e *= s;
     }
 
 }
-void RunStdForEachTest(std::vector<float>& v, float s) {
-    std::transform(v.begin(), v.end(), v.begin(), [s](float e) {return e * s; });
+void RunStdForEachTest(std::vector<ElementType>& v, ElementType s) {
+    std::transform(v.begin(), v.end(), v.begin(), [s](ElementType e) {return e * s; });
 }
-void RunStdTransformTest(std::vector<float>& v, float s) {
-    std::transform(v.begin(), v.end(), v.begin(), [s](float e) {return e * s; });
+void RunStdTransformTest(std::vector<ElementType>& v, ElementType s) {
+    std::transform(v.begin(), v.end(), v.begin(), [s](ElementType e) {return e * s; });
 }
-void RunValArrayTest(float* v, float s) {
-
-}
-void RunBlasTest(float* v, blasint size, float s) {
+void RunBlasTest(ElementType* v, blasint size, ElementType s) {
+#ifdef FLOATTEST
     cblas_sscal(size, s, v, 1);
+#else
+    cblas_dscal(size, s, v, 1);
+#endif
 }
-void RunAvxTest(float* begin, float* end, float s) {
-
+void RunAvxTest(ElementType* begin, ElementType* end, ElementType s) {
+#ifdef FLOATTEST
     __m256 _s = { s, s, s, s, s, s, s, s };
-    float* m256end = end - 8;
-    float* p = begin;
-    for (; p < m256end; p += 8)
+    const int step = 8;
+#else
+    __m256d _s = { s, s, s, s };
+    const int step = 4;
+#endif
+    ElementType* p = begin;
+    ElementType* m256end = end - step;
+    for (; p < m256end; p += step)
     {
+#ifdef FLOATTEST
         __m256 _e = _mm256_loadu_ps(p);
         auto _r = _mm256_mul_ps(_e, _s);
         _mm256_store_ps(p, _r);
+#else
+        __m256d _e = _mm256_loadu_pd(p);
+        auto _r = _mm256_mul_pd(_e, _s);
+        _mm256_store_pd(p, _r);
+#endif
     }
     // finish with c-style
     for (; p < end; p++) {
@@ -145,14 +157,14 @@ int main(int argc, char* argv[])
 
     printf("Running %s with %d iterations...", testName.c_str(), iterations);
 
-    float* v = (float*)calloc(size + 1, sizeof(float));
-    std::vector<float> vector(size);
+    ElementType* v = (ElementType*)calloc(size + 1, sizeof(ElementType));
+    std::vector<ElementType> vector(size);
     for (size_t j = 0; j < size; j++)
     {
-        v[j] = (float)rand() / 32767.0f;
+        v[j] = (ElementType)rand() / 32767.0f;
         vector[j] = v[j];
     }
-    float e = (float)std::exp(1);
+    ElementType e = (ElementType)std::exp(1);
 
     // test if blas works..
 
@@ -199,9 +211,6 @@ int main(int argc, char* argv[])
             break;
         case StdTransformTest:
             RunStdTransformTest(vector, e);
-            break;
-        case ValArrayTest:
-            RunValArrayTest(v, e);
             break;
         case BlasTest:
             RunBlasTest(v, (blasint)size, e);
