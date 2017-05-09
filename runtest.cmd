@@ -1,5 +1,5 @@
 @echo off
-msbuild /p:Configuration=Release /p:Platform=x64 VectorMultiplyTest\VectorMultiplyTest.sln > nul 
+msbuild /p:Configuration=Release /p:Platform=x64 VectorMultiplyTest\VectorMultiplyTest.sln /t:Rebuild  > nul  
 sleep 1
 echo =============== Double test =============================
 .\VectorMultiplyTest\x64\Release\VectorMultiplyTest.exe  -i 100 -c

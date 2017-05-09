@@ -7,6 +7,10 @@
 #include <algorithm>    // std::transform
 #include "MathHelpers.h"
 #include "cblas.h"
+#include <omp.h>  
+
+#define PARALLELFOR
+#define NUM_THREADS 4
 
 //#define FLOATTEST
 #ifdef FLOATTEST
@@ -86,23 +90,44 @@ void printUsage() {
 
 
 void RunCTest(ElementType* begin, ElementType* end, ElementType s) {
-    for (ElementType* f = begin; f < end; f++)
+    int64_t i = 0;
+    int64_t start = (int64_t)begin;
+    int64_t e = (int64_t)end;
+#ifdef PARALLELFOR
+    #pragma omp parallel default(none) private(i) shared(begin, end)
     {
+    #pragma omp for 
+#endif
+    for (i = start; i < e; i += sizeof(ElementType))
+    {
+        ElementType* f = (ElementType*)i;
         *f *= s;
     }
+#ifdef PARALLELFOR
+    }
+#endif
 }
 void RunC2Test(ElementType* v, size_t size, ElementType s) {
-    for (size_t i = 0; i < size; ++i)
+    int64_t i = 0;
+    int64_t end = (int64_t)size;
+#ifdef PARALLELFOR
+    #pragma omp parallel default(none) private(i) shared(size)
+    {
+#endif
+    #pragma omp for 
+    for (i = 0; i < end; ++i)
     {
         v[i] *= s;
     }
+#ifdef PARALLELFOR
+}
+#endif
 }
 void RunCxxTest(std::vector<ElementType>& v, ElementType s) {
     for (auto& e : v)
     {
         e *= s;
     }
-
 }
 void RunStdForEachTest(std::vector<ElementType>& v, ElementType s) {
     std::transform(v.begin(), v.end(), v.begin(), [s](ElementType e) {return e * s; });
@@ -155,7 +180,13 @@ int main(int argc, char* argv[])
     std::vector<double> times;
     Timer timer;
 
+#ifdef PARALLELFOR
+    openblas_set_num_threads(NUM_THREADS);
+    omp_set_num_threads(NUM_THREADS);
+#else
     openblas_set_num_threads(1);
+#endif
+
 
     printf("%s,\t", testName.c_str());
 
